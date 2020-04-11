@@ -51,7 +51,7 @@ function addData() {
   inquirer
     .prompt({
       type: "list",
-      choices: ["Add department", "Add roles", "Add employees"],
+      choices: ["Add department", "Add role", "Add employee"],
       message: "Witch Data Do you want to add?",
       name: "add_data"
     })
@@ -60,7 +60,7 @@ function addData() {
       if (answer.add_data === "Add department") {
         addDepartment()
       } else if (answer.add_data === "Add role") {
-        addRoles()
+        addRole()
       } else if (answer.add_data === "Add employee") {
         addEmployee()
       } else {
@@ -68,7 +68,6 @@ function addData() {
       }
     });
 }
-
 
 function addDepartment() {
   inquirer.prompt({
@@ -83,7 +82,7 @@ function addDepartment() {
   })
 }
 
-function addRoles() {
+function addRole() {
   inquirer
     .prompt(
       {
@@ -125,7 +124,7 @@ function addRoles() {
         // NEED to add role id
         // NEED add manager id
       ).then(function (answer) {
-        connection.query("INSERT INTO employee ?",
+        connection.query("INSERT INTO employee?",
         {
           first_name: answer.first_name,
           last_name: answer.last_name,
@@ -143,18 +142,18 @@ function addRoles() {
     inquirer
       .prompt({
         type: "list",
-        choices: ["View department", "View roles", "View employees"],
-        message: "Witch Data Do you want to add?",
-        name: "add_data"
+        choices: ["View department", "View role", "View employee"],
+        message: "Witch Data Do you want to view?",
+        name: "view_data"
       })
       .then(function (answer) {
         // based on their answer, either call the bid or the post functions
-        if (answer.add_data === "View department") {
+        if (answer.view_data === "View department") {
           viewDepartment()
-        } else if (answer.add_data === "View roles") {
-          viewData(roles)
-        } else if (answer.add_data === "View employees") {
-          viewData(employees)
+        } else if (answer.add_data === "View role") {
+          viewRole()
+        } else if (answer.add_data === "View employee") {
+         
         } else {
           connection.end();
         }
@@ -163,63 +162,21 @@ function addRoles() {
   
   
   function viewDepartment() {
-    var query = "SELECT * FROM department INNER JOIN top5000 ON (top_albums.artist = top5000.artist AND top_albums.year ";
-    query += "= top5000.year) WHERE (top_albums.artist = ? AND top5000.artist = ?) ORDER BY top_albums.year, top_albums.position";
-
-      connection.query("VIEW * department", function(err, results) {
+    connection.query("SELECT * FROM department", function(err, results) {
+    if (err) throw err;
+    })
+  }
+  
+  function viewRole() {
+    var query = "SELECT department.id FROM department INNER JOIN role ON (role.department_id = department_id";
+      connection.query(query, function(err, results) {
         if (err) throw err;
       })
   }
-  
-  function addRole() {
-    inquirer
-      .prompt(
-        {
-          type: "input",
-          message: "Enter new title",
-          name: "add_title"
-        },
-        {
-          type: "input",
-          message: "Enter new salary",
-          name: "add_salary"
-        },
-        // NEED to add department id
-      ).then(function (answer) {
-        connection.query("INSERT INTO role ?",
-        {
-          title: answer.add_title,
-          salary: answer.salary,
-        }
-        , function(err, results) {
-          if (err) throw err;
-        })
+
+  function viewEmployee() {
+    var query = "SELECT role.id, manager.id FROM role INNER JOIN employee ON (employee.department_id = department_id";
+      connection.query(query, function(err, results) {
+        if (err) throw err;
       })
-    }
-  
-    function addEmployee() {
-      inquirer
-        .prompt(
-          {
-            type: "input",
-            message: "Enter new employee first name",
-            name: "first_name"
-          },
-          {
-            type: "input",
-            message: "Enter new employee first name",
-            name: "last_name"
-          },
-          // NEED to add role id
-          // NEED add manager id
-        ).then(function (answer) {
-          connection.query("INSERT INTO employee ?",
-          {
-            first_name: answer.first_name,
-            last_name: answer.last_name,
-          }
-          , function(err, results) {
-            if (err) throw err;
-          })
-        })
-      }
+  }
