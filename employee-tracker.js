@@ -1,233 +1,225 @@
-var mysql = require("mysql");
-var inquirer = require("inquirer");
+const mysql = require("mysql");
+const inquirer = require("inquirer");
 
-// create the connection information for the sql database
-var connection = mysql.createConnection({
+const connection = mysql.createConnection({
   host: "localhost",
-
-  // Your port; if not 3306
   port: 3000,
-
-  // Your username
   user: "root",
-
-  // Your password
   password: "password",
   database: "employee_tracker_DB"
 });
 
 
 // connect to the mysql server and sql database
-connection.connect(function(err) {
+connection.connect(function (err) {
   if (err) throw err;
+  console.log('eee')
   // run the start function after the connection is made to prompt the user
-  start();
+  //start();
 });
 
 
 // function which prompts the user for what action they should take
 function start() {
-
-  function chooseToDo() {
-    // add? view?
-  }
-
-  function AddData() {
-    // witch one
-    inquirer
-      .prompt({
-        name: "view_dep",
-        type: "list",
-        message: "What Do you want to add data??",
-        choices: ["department", "role", "employee"]
-      })
-      .then(function(answer) {
-        // based on their answer, either call the bid or the post functions
-        if (answer.postOrBid === "department") {
-          //do department
-        }
-        else if(answer.postOrBid === "role") {
-          //do role
-        } else{
-          connection.end();
-        }
-      });
-  }
-
-  function viewData() {
-    // witch one
-    inquirer
-      .prompt({
-        name: "view_dep",
-        type: "list",
-        message: "What Do you want to see??",
-        choices: ["department", "role", "employee"]
-      })
-      .then(function(answer) {
-        // based on their answer, either call the bid or the post functions
-        if (answer.postOrBid === "POST") {
-          postAuction();
-        }
-        else if(answer.postOrBid === "BID") {
-          bidAuction();
-        } else{
-          connection.end();
-        }
-      });
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-// function which prompts the user for what action they should take
-function start() {
+  // witch one
   inquirer
     .prompt({
-      name: "postOrBid",
       type: "list",
-      message: "Would you like to [POST] an auction or [BID] on an auction?",
-      choices: ["POST", "BID", "EXIT"]
+      choices: ["Add Data", "View Data", "Update Data", "I'm Done, Take me out"],
+      message: "What Do you want to do??",
+      name: "view_dep"
     })
-    .then(function(answer) {
+    .then(function (answer) {
       // based on their answer, either call the bid or the post functions
-      if (answer.postOrBid === "POST") {
-        postAuction();
-      }
-      else if(answer.postOrBid === "BID") {
-        bidAuction();
-      } else{
+      if (answer.view_dep === "Add Data") {
+        console.log("Add Data")
+        addData()
+      } else if (answer.view_dep === "View Data") {
+        chooseViewData()
+      } else if (answer.view_dep === "Update Data") {
+        console.log("Update Data")
+      } else {
         connection.end();
       }
     });
 }
 
-// function to handle posting new items up for auction
-function postAuction() {
-  // prompt for info about the item being put up for auction
+// ************** ADD DATA **************
+
+function addData() {
+  // witch one
   inquirer
-    .prompt([
-      {
-        name: "item",
-        type: "input",
-        message: "What is the item you would like to submit?"
-      },
-      {
-        name: "category",
-        type: "input",
-        message: "What category would you like to place your auction in?"
-      },
-      {
-        name: "startingBid",
-        type: "input",
-        message: "What would you like your starting bid to be?",
-        validate: function(value) {
-          if (isNaN(value) === false) {
-            return true;
-          }
-          return false;
-        }
+    .prompt({
+      type: "list",
+      choices: ["Add department", "Add roles", "Add employees"],
+      message: "Witch Data Do you want to add?",
+      name: "add_data"
+    })
+    .then(function (answer) {
+      // based on their answer, either call the bid or the post functions
+      if (answer.add_data === "Add department") {
+        addDepartment()
+      } else if (answer.add_data === "Add role") {
+        addRoles()
+      } else if (answer.add_data === "Add employee") {
+        addEmployee()
+      } else {
+        connection.end();
       }
-    ])
-    .then(function(answer) {
-      // when finished prompting, insert a new item into the db with that info
-      connection.query(
-        "INSERT INTO auctions SET ?",
-        {
-          item_name: answer.item,
-          category: answer.category,
-          starting_bid: answer.startingBid || 0,
-          highest_bid: answer.startingBid || 0
-        },
-        function(err) {
-          if (err) throw err;
-          console.log("Your auction was created successfully!");
-          // re-prompt the user for if they want to bid or post
-          start();
-        }
-      );
     });
 }
 
-function bidAuction() {
-  // query the database for all items being auctioned
-  connection.query("SELECT * FROM auctions", function(err, results) {
-    if (err) throw err;
-    // once you have the items, prompt the user for which they'd like to bid on
+
+function addDepartment() {
+  inquirer.prompt({
+    type: "input",
+    message: "Enter name of new department",
+    name: "add_department"
+  }).then(function (answer) {
+    connection.query("INSERT INTO department ?", {name: answer.add_department}
+    , function(err, results) {
+      if (err) throw err;
+    })
+  })
+}
+
+function addRoles() {
+  inquirer
+    .prompt(
+      {
+        type: "input",
+        message: "Enter new title",
+        name: "add_title"
+      },
+      {
+        type: "input",
+        message: "Enter new salary",
+        name: "add_salary"
+      },
+      // NEED to add department id
+    ).then(function (answer) {
+      connection.query("INSERT INTO role ?",
+      {
+        title: answer.add_title,
+        salary: answer.salary,
+      }
+      , function(err, results) {
+        if (err) throw err;
+      })
+    })
+  }
+
+  function addEmployee() {
     inquirer
-      .prompt([
+      .prompt(
         {
-          name: "choice",
-          type: "rawlist",
-          choices: function() {
-            var choiceArray = [];
-            for (var i = 0; i < results.length; i++) {
-              choiceArray.push(results[i].item_name);
-            }
-            return choiceArray;
-          },
-          message: "What auction would you like to place a bid in?"
+          type: "input",
+          message: "Enter new employee first name",
+          name: "first_name"
         },
         {
-          name: "bid",
           type: "input",
-          message: "How much would you like to bid?"
+          message: "Enter new employee first name",
+          name: "last_name"
+        },
+        // NEED to add role id
+        // NEED add manager id
+      ).then(function (answer) {
+        connection.query("INSERT INTO employee ?",
+        {
+          first_name: answer.first_name,
+          last_name: answer.last_name,
         }
-      ])
-      .then(function(answer) {
-        // get the information of the chosen item
-        var chosenItem;
-        for (var i = 0; i < results.length; i++) {
-          if (results[i].item_name === answer.choice) {
-            chosenItem = results[i];
-          }
-        }
+        , function(err, results) {
+          if (err) throw err;
+        })
+      })
+    }
 
-        // determine if bid was high enough
-        if (chosenItem.highest_bid < parseInt(answer.bid)) {
-          // bid was high enough, so update db, let the user know, and start over
-          connection.query(
-            "UPDATE auctions SET ? WHERE ?",
-            [
-              {
-                highest_bid: answer.bid
-              },
-              {
-                id: chosenItem.id
-              }
-            ],
-            function(error) {
-              if (error) throw err;
-              console.log("Bid placed successfully!");
-              start();
-            }
-          );
-        }
-        else {
-          // bid wasn't high enough, so apologize and start over
-          console.log("Your bid was too low. Try again...");
-          start();
+
+  // ************** VIEW DATA **************
+  function chooseViewData() {
+    // witch one
+    inquirer
+      .prompt({
+        type: "list",
+        choices: ["View department", "View roles", "View employees"],
+        message: "Witch Data Do you want to add?",
+        name: "add_data"
+      })
+      .then(function (answer) {
+        // based on their answer, either call the bid or the post functions
+        if (answer.add_data === "View department") {
+          viewDepartment()
+        } else if (answer.add_data === "View roles") {
+          viewData(roles)
+        } else if (answer.add_data === "View employees") {
+          viewData(employees)
+        } else {
+          connection.end();
         }
       });
-  });
-}
-*/
+  }
+  
+  
+  function viewDepartment() {
+    var query = "SELECT * FROM department INNER JOIN top5000 ON (top_albums.artist = top5000.artist AND top_albums.year ";
+    query += "= top5000.year) WHERE (top_albums.artist = ? AND top5000.artist = ?) ORDER BY top_albums.year, top_albums.position";
+
+      connection.query("VIEW * department", function(err, results) {
+        if (err) throw err;
+      })
+  }
+  
+  function addRole() {
+    inquirer
+      .prompt(
+        {
+          type: "input",
+          message: "Enter new title",
+          name: "add_title"
+        },
+        {
+          type: "input",
+          message: "Enter new salary",
+          name: "add_salary"
+        },
+        // NEED to add department id
+      ).then(function (answer) {
+        connection.query("INSERT INTO role ?",
+        {
+          title: answer.add_title,
+          salary: answer.salary,
+        }
+        , function(err, results) {
+          if (err) throw err;
+        })
+      })
+    }
+  
+    function addEmployee() {
+      inquirer
+        .prompt(
+          {
+            type: "input",
+            message: "Enter new employee first name",
+            name: "first_name"
+          },
+          {
+            type: "input",
+            message: "Enter new employee first name",
+            name: "last_name"
+          },
+          // NEED to add role id
+          // NEED add manager id
+        ).then(function (answer) {
+          connection.query("INSERT INTO employee ?",
+          {
+            first_name: answer.first_name,
+            last_name: answer.last_name,
+          }
+          , function(err, results) {
+            if (err) throw err;
+          })
+        })
+      }
