@@ -3,25 +3,21 @@ const inquirer = require("inquirer");
 
 const connection = mysql.createConnection({
   host: "localhost",
-  port: 3000,
+  port: 3306,
   user: "root",
   password: "password",
-  database: "employee_tracker_DB"
+  database: "employee_tracker_db"
 });
 
-
-// connect to the mysql server and sql database
 connection.connect(function (err) {
   if (err) throw err;
-  console.log('eee')
-  // run the start function after the connection is made to prompt the user
-  //start();
+  start();
+  //getTitlesArr()
 });
 
 
-// function which prompts the user for what action they should take
+// ask the user what he wants to do
 function start() {
-  // witch one
   inquirer
     .prompt({
       type: "list",
@@ -30,28 +26,27 @@ function start() {
       name: "view_dep"
     })
     .then(function (answer) {
-      // based on their answer, either call the bid or the post functions
       if (answer.view_dep === "Add Data") {
-        console.log("Add Data")
         addData()
       } else if (answer.view_dep === "View Data") {
         chooseViewData()
       } else if (answer.view_dep === "Update Data") {
-        console.log("Update Data")
+        UpdateData()
       } else {
         connection.end();
       }
     });
 }
 
-// ************** ADD DATA **************
 
+
+// ************** ADD DATA **************
 function addData() {
   // witch one
   inquirer
     .prompt({
       type: "list",
-      choices: ["Add department", "Add role", "Add employee"],
+      choices: ["Add department", "Add role title", "Add employee"],
       message: "Witch Data Do you want to add?",
       name: "add_data"
     })
@@ -59,7 +54,7 @@ function addData() {
       // based on their answer, either call the bid or the post functions
       if (answer.add_data === "Add department") {
         addDepartment()
-      } else if (answer.add_data === "Add role") {
+      } else if (answer.add_data === "Add role title") {
         addRole()
       } else if (answer.add_data === "Add employee") {
         addEmployee()
@@ -75,10 +70,13 @@ function addDepartment() {
     message: "Enter name of new department",
     name: "add_department"
   }).then(function (answer) {
-    connection.query("INSERT INTO department ?", {name: answer.add_department}
-    , function(err, results) {
-      if (err) throw err;
-    })
+    let newDepartment = answer.add_department
+    connection.query("INSERT INTO department SET ?", { name: newDepartment}
+      , function (err, results) {
+        if (err) throw err;
+        console.log(`${newDepartment} add to departments`)
+        start()
+      })
   })
 }
 
@@ -90,50 +88,111 @@ function addRole() {
         message: "Enter new title",
         name: "add_title"
       },
-      {
-        type: "input",
-        message: "Enter new salary",
-        name: "add_salary"
-      },
       // NEED to add department id
     ).then(function (answer) {
-      connection.query("INSERT INTO role ?",
-      {
-        title: answer.add_title,
-        salary: answer.salary,
-      }
-      , function(err, results) {
-        if (err) throw err;
-      })
+      let newTitle = answer.add_title
+      connection.query("INSERT INTO role SET ?",{title: newTitle}
+        , function (err, results) {
+          if (err) throw err;
+          console.log(`${newTitle} add to titles`)
+          start()
+        })
+        
     })
-  }
+}
 
-  function addEmployee() {
-    inquirer
-      .prompt(
+
+
+function addEmployee() {
+  let departmentArr = getDepartmentArr()
+  let titlesArr = getTitlesArr()
+  inquirer
+    .prompt([
+      {
+      type: "input",
+      message: "Enter new employee first name",
+      name: "firstname"
+      },
+      {
+        type: "input",
+        message: "Enter new employee last name",
+        name: "lastname"
+      },
+      {
+        type: "list",
+        choices: titlesArr,
+        message: "choose title",
+        name: "title"
+      },
+      {
+        type: "input",
+        message: "Enter new employee salary",
+        name: "salary"
+      },
+      {
+        type: "list",
+        choices: departmentArr,
+        message: "choose department",
+        name: "department"
+      }
+    ]).then(function (answer) {
+      console.log("answer: "+answer)
+      connection.query(
+        ("INSERT INTO department SET ?",
         {
-          type: "input",
-          message: "Enter new employee first name",
-          name: "first_name"
-        },
-        {
-          type: "input",
-          message: "Enter new employee first name",
-          name: "last_name"
-        },
-        // NEED to add role id
-        // NEED add manager id
-      ).then(function (answer) {
-        connection.query("INSERT INTO employee?",
-        {
-          first_name: answer.first_name,
-          last_name: answer.last_name,
+         name: answer.department,
         }
-        , function(err, results) {
+        , function (err, results) {
+          if (err) throw err;
+        }),
+        ("INSERT INTO role SET ?",
+        {
+         title: answer.title,
+         salary: answer.salary
+        }
+        , function (err, results) {
+          if (err) throw err;
+        }),
+        "INSERT INTO employee SET ?",
+        {
+         first_name: answer.firstname,
+         last_name: answer.lastname,
+        }
+        , function (err, results) {
           if (err) throw err;
         })
-      })
+        console.log(`${answer.firstname} added to employees data`)
+        //connection.end();
+        start()
+    })
+}
+
+// get departments array
+function getDepartmentArr(){
+  let employeesArr = [];
+  connection.query("SELECT name FROM department", function (err, res) {
+    if (err) throw err;
+    for (let i = 0; i < res.length; i++) {
+      let e = res[i].name;
+      employeesArr.push(e);
+      //console.log(employeesArr)
     }
+  });
+  return employeesArr
+}
+
+// get titles array
+function getTitlesArr(){
+  let titleArr = [];
+  connection.query("SELECT title FROM role", function (err, res) {
+    if (err) throw err;
+    for (let i = 0; i < res.length; i++) {
+      let e = res[i].title;
+      titleArr.push(e);
+    }
+  });
+  return titleArr
+}
 
 
   // ************** VIEW DATA **************
@@ -147,36 +206,65 @@ function addRole() {
         name: "view_data"
       })
       .then(function (answer) {
-        // based on their answer, either call the bid or the post functions
         if (answer.view_data === "View department") {
           viewDepartment()
         } else if (answer.add_data === "View role") {
           viewRole()
         } else if (answer.add_data === "View employee") {
-         
+          viewEmployee()
         } else {
           connection.end();
         }
       });
   }
-  
-  
+
+
   function viewDepartment() {
-    connection.query("SELECT * FROM department", function(err, results) {
-    if (err) throw err;
+    connection.query("SELECT * FROM department", function (err, results) {
+      if (err) throw err;
     })
   }
-  
+
   function viewRole() {
     var query = "SELECT department.id FROM department INNER JOIN role ON (role.department_id = department_id";
-      connection.query(query, function(err, results) {
-        if (err) throw err;
-      })
+    connection.query(query, function (err, results) {
+      if (err) throw err;
+    })
   }
 
   function viewEmployee() {
     var query = "SELECT role.id, manager.id FROM role INNER JOIN employee ON (employee.department_id = department_id";
-      connection.query(query, function(err, results) {
-        if (err) throw err;
-      })
+    connection.query(query, function (err, results) {
+      if (err) throw err;
+    })
   }
+
+
+  // ************** UPDATE DATA **************
+
+  function UpdateData() {
+    var query = "UPDATE employee.id, employee.first_name FROM top5000 GROUP BY artist HAVING count(*) > 1";
+    //UPDATE EMPLOYEE ROLES
+    // select employee to get his role
+    // update his role
+    inquirer
+      .prompt({
+        type: "list",
+        choices: ["Add department", "Add role", "Add employee"],
+        message: "Witch Data Do you want to add?",
+        name: "add_data"
+      })
+      .then(function (answer) {
+        // based on their answer, either call the bid or the post functions
+        if (answer.add_data === "Add department") {
+          addDepartment()
+        } else if (answer.add_data === "Add role") {
+          addRole()
+        } else if (answer.add_data === "Add employee") {
+          addEmployee()
+        } else {
+          connection.end();
+        }
+      });
+  }
+
