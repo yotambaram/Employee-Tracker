@@ -57,7 +57,7 @@ function addData() {
       } else if (answer.add_data === "Add role title") {
         addRole()
       } else if (answer.add_data === "Add employee") {
-        addEmployee()
+        addEmployeeName()
       } else {
         connection.end();
       }
@@ -88,10 +88,16 @@ function addRole() {
         message: "Enter new title",
         name: "add_title"
       },
-      // NEED to add department id
+      {
+        type: "input",
+        message: "Enter new title salary",
+        name: "add_title"
+      }
     ).then(function (answer) {
       let newTitle = answer.add_title
       connection.query("INSERT INTO role SET ?",{title: newTitle}
+      ///////////////SALARY//////////////
+      ///////////////choose dep////////
         , function (err, results) {
           if (err) throw err;
           console.log(`${newTitle} add to titles`)
@@ -103,9 +109,15 @@ function addRole() {
 
 
 
-function addEmployee() {
-  let departmentArr = getDepartmentArr()
+
+
+
+
+
+
+function addEmployeeName() {
   let titlesArr = getTitlesArr()
+  let departmentArr = getDepartmentArr()
   inquirer
     .prompt([
       {
@@ -117,55 +129,97 @@ function addEmployee() {
         type: "input",
         message: "Enter new employee last name",
         name: "lastname"
-      },
-      {
-        type: "list",
-        choices: titlesArr,
-        message: "choose title",
-        name: "title"
-      },
-      {
-        type: "input",
-        message: "Enter new employee salary",
-        name: "salary"
-      },
-      {
-        type: "list",
-        choices: departmentArr,
-        message: "choose department",
-        name: "department"
       }
-    ]).then(function (answer) {
-      console.log("answer: "+answer)
-      connection.query(
-        ("INSERT INTO department SET ?",
-        {
-         name: answer.department,
-        }
-        , function (err, results) {
-          if (err) throw err;
-        }),
-        ("INSERT INTO role SET ?",
-        {
-         title: answer.title,
-         salary: answer.salary
-        }
-        , function (err, results) {
-          if (err) throw err;
-        }),
-        "INSERT INTO employee SET ?",
+      ]).then(answer=> {
+        connection.query("INSERT INTO employee SET ?",
         {
          first_name: answer.firstname,
          last_name: answer.lastname,
         }
         , function (err, results) {
           if (err) throw err;
+          addEmployeeRoll(titlesArr, departmentArr)
         })
-        console.log(`${answer.firstname} added to employees data`)
-        //connection.end();
-        start()
+      })
+}
+
+
+function addEmployeeRoll(titles, departments) {
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        choices: titles,
+        message: "What is the new employee role?",
+        name: "role-id"
+      },
+      {
+        type: "list",
+        choices: departments,
+        message: "choose department",
+        name: "department"
+      }
+      ]).then(answer=> {
+        //find chosen titte ID with sql!!!
+        let query = `SELECT roleid FROM role GROUP BY roleid HAVING count(*) =${role-id}`;
+        connection.query(query,
+        {
+         first_name: answer.firstname,
+         last_name: answer.lastname,
+        }
+        , function (err, results) {
+          if (err) throw err;
+          addEmployeeRoll(titlesArr, departmentArr)
+        })
+      })
+}
+
+/*
+
+
+        connection.query("INSERT INTO role SET ?",
+      {
+       title: answer.title,
+       salary: answer.salary
+      }
+      , function (err, results) {
+        if (err) throw err;
+        addEmployeeDepartment(departmentArr)
+      }),
+      ("INSERT INTO role SET ?",
+      {
+       title: answer.title,
+       salary: answer.salary
+      }
+      , function (err, results) {
+        if (err) throw err;
+        addEmployeeDepartment(departmentArr)
+      })
     })
 }
+
+function addEmployeeDepartment(departmentArr) {
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        choices: departmentArr,
+        message: "choose department",
+        name: "department"
+      }
+      ]).then(answer=> {
+        connection.query("INSERT INTO department SET ?",
+        {
+          name: answer.department,
+        }
+      , function (err, results) {
+        if (err) throw err;
+        console.log(`added to employees data`)
+        //start()
+      })
+    })
+}
+*/
 
 // get departments array
 function getDepartmentArr(){
