@@ -25,21 +25,15 @@ CREATE TABLE employee(
   last_name VARCHAR(30) NOT NULL,
   role_id INT,
   manager_id INT,
-  FOREIGN KEY (role_id) REFERENCES role(role_id),
-  FOREIGN KEY (manager_id) REFERENCES role(role_id),
+  FOREIGN KEY (role_id) REFERENCES role (role_id),
+  FOREIGN KEY (manager_id) REFERENCES employee (employee_id),
   PRIMARY KEY (employee_id)
 );
-
-
-
-INSERT INTO employee (first_name, last_name)
-VALUES ("test-first-name", "test-last-name"),("test-first-name2", "test-last-name3");
-
-INSERT INTO role (title, salary)
-VALUES ("manager", 10.3),("engineer", 8.5);
-
 INSERT INTO department (name)
 VALUES ("support"),("sales"),("develop");
 
+INSERT INTO role (title, salary, department_id)
+VALUES ("manager", 10.3, 3),("engineer", 8.5, 3);
 
-
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
+VALUES ("yotam", "baram", 1, null),("adam", "baram", 2, 1);

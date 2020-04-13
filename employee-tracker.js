@@ -44,29 +44,33 @@ function start() {
 
 
 // ************** ADD DATA **************
+// choose witch data do you want to add
 function addData() {
   // witch one
   inquirer
     .prompt({
       type: "list",
-      choices: ["Add department", "Add role title", "Add employee"],
+      choices: ["Add department", "Add role title", "Add employee", "Back to menu"],
       message: "Witch Data Do you want to add?",
       name: "add_data"
     })
     .then(function (answer) {
       // based on their answer, either call the bid or the post functions
       if (answer.add_data === "Add department") {
-        addNewDepartment()
+        addNewDepartment();
       } else if (answer.add_data === "Add role title") {
-        addNewRole()
+        addNewRole();
       } else if (answer.add_data === "Add employee") {
-        addNewEmployeeName()
+        addNewEmployeeName();
+      } else if (answer.add_data === "Back to menu") {
+        start();
       } else {
         connection.end();
       }
     });
 }
 
+// add new department
 function addNewDepartment() {
   inquirer.prompt({
     type: "input",
@@ -83,6 +87,7 @@ function addNewDepartment() {
   })
 }
 
+// add new role
 function addNewRole() {
   inquirer
     .prompt(
@@ -110,10 +115,14 @@ function addNewRole() {
 }
 
 
+////////////////////
+// add new employee
 
-//input new employee name
+//add full name
 function addNewEmployeeName() {
-  let titlesArr = getTitlesArr()
+  //let titlesArr = getTitlesArr() ////////////
+  let managerArr = arrBuilder(role)
+  newEmployeeArr = []
   inquirer
     .prompt([
       {
@@ -128,14 +137,14 @@ function addNewEmployeeName() {
       }
       ]).then(answer=> {
         newEmployeeArr.push(answer.firstname, answer.lastname)
-        addEmployeeRoll(titlesArr)
+        addEmployeeRoll(managerArr)
       })      
 }
 
 // choose role
 function addEmployeeRoll(titles) {
-  let managerArr = getManagerArr()
-  //console.log(titles, name, managers)
+  //let managerArr = getManagerArr() //////////////////
+  let managerArr = arrBuilder(manager)
   inquirer
     .prompt([
       {
@@ -145,21 +154,17 @@ function addEmployeeRoll(titles) {
         name: "roletitle"
       }
       ]).then(answer=> {
-        //get role_id
         let query = `SELECT role_id FROM role WHERE title = '${answer.roletitle}';`
         connection.query(query, function (err, res) {
           if (err) throw err;
-          newEmployeeArr.push(res[0].role_id)
-          //console.log(NewEmployeeArr, managerArr)
+          newEmployeeArr.push(res[0].role_id);
           getManagerID(managerArr);
-           
       })
     })
 }
 
 // choose manager
 function getManagerID(managers){
-  console.log(newEmployeeArr, managers)
   inquirer
     .prompt([
       {
@@ -169,21 +174,20 @@ function getManagerID(managers){
         name: "manager"
       }
     ]).then(answer=> {
+      //  possible to set all names to small letters (end case)
       let managerName = answer.manager.split(" ")
-      console.log(managerName)
       let query = `SELECT employee_id FROM employee WHERE first_name = '${managerName[0]}' AND employee.last_name = '${managerName[1]}';`
       connection.query(query, function (err, res) {
         if (err) throw err;
-        newEmployeeArr.push(res[0].employee_id)
-        CreateNewEmployeeDB()
-         
+        let managerID = res[0].employee_id;
+        newEmployeeArr.push(managerID);
+        CreateNewEmployeeDB();
     })
   })
 }
 
-
+// set the new employee in db
 function CreateNewEmployeeDB(){
-  let test = newEmployeeArr[0]
   connection.query("INSERT INTO employee SET ?",
         {
           first_name: newEmployeeArr[0],
@@ -191,24 +195,26 @@ function CreateNewEmployeeDB(){
           role_id: newEmployeeArr[2],
           manager_id: newEmployeeArr[3]
         }
-      , function (err, results) {
+        , function (err, results) {
         if (err) throw err;
-        console.log(`added to employees data`)
+        console.log(`added to employees data`);
+        start()
       });
 }
 
+/*
 // get managers names
 function getManagerArr(){
-  const namesArr = []
+  const namesArr = [];
   let query = "SELECT * FROM (employee INNER JOIN role ON (employee.role_id = role.role_id)) WHERE (role.title = 'manager')";
   connection.query(query, function (err, res) {
     if (err) throw err;
     for (let i = 0; i < res.length; i++) {
-    e = res[i].first_name + " " + res[i].last_name
+    e = res[i].first_name + " " + res[i].last_name;
     namesArr.push(e)
     }
   });
-  return namesArr
+  return namesArr;
 }
 
 // get roles array
@@ -221,52 +227,77 @@ function getTitlesArr(){
       titleArr.push(e);
     }
   });
-  return titleArr
+  return titleArr;
+}
+*/
+function arrBuilder(arrRec){
+  const arrStorge = {
+    manager: "SELECT * FROM (employee INNER JOIN role ON (employee.role_id = role.role_id)) WHERE (role.title = 'manager')",
+    role: "SELECT title FROM role"
+  }
+  let query = arrStorge.arrRec
+  connection.query("query", function (err, res) {
+    if (err) throw err;
+    for (let i = 0; i < res.length; i++) {
+      let e = res[i].title;
+      titleArr.push(e);
+    }
+  });
+  return newArr;
+}
+
+// ************** VIEW DATA **************
+function chooseViewData() {
+  // choose data to view
+  inquirer
+    .prompt({
+      type: "list",
+      choices: ["View department", "View role", "View employee", "Back to menu"],
+      message: "Witch Data Do you want to view?",
+      name: "view_data"
+    })
+    .then(function (answer) {
+      if (answer.view_data === "View department") {
+        viewDepartment()
+      } else if (answer.view_data === "View role") {
+        viewRole()
+      } else if (answer.view_data === "View employee") {
+        viewEmployee()
+      } else if (answer.view_data === "Back to menu") {
+        start()
+      } else {
+        connection.end();
+      }
+    });
 }
 
 
-
-  // ************** VIEW DATA **************
-  function chooseViewData() {
-    // witch one
-    inquirer
-      .prompt({
-        type: "list",
-        choices: ["View department", "View role", "View employee"],
-        message: "Witch Data Do you want to view?",
-        name: "view_data"
-      })
-      .then(function (answer) {
-        if (answer.view_data === "View department") {
-          viewDepartment()
-        } else if (answer.add_data === "View role") {
-          viewRole()
-        } else if (answer.add_data === "View employee") {
-          viewEmployee()
-        } else {
-          connection.end();
-        }
-      });
-  }
-
-
   function viewDepartment() {
-    connection.query("SELECT * FROM department", function (err, results) {
+    let query = "SELECT * FROM department";
+    connection.query(query, function (err, results) {
       if (err) throw err;
+      console.table(results)
+      start()
     })
   }
 
   function viewRole() {
-    var query = "SELECT department.id FROM department INNER JOIN role ON (role.department_id = department_id";
+    let query = "SELECT * FROM role";
     connection.query(query, function (err, results) {
       if (err) throw err;
+      console.table(results)
+      start()
     })
   }
 
+
+
   function viewEmployee() {
-    var query = "SELECT role.id, manager.id FROM role INNER JOIN employee ON (employee.department_id = department_id";
+    let query = "SELECT * FROM employee";
     connection.query(query, function (err, results) {
       if (err) throw err;
+      console.table(results)
+      start()
     })
   }
 
