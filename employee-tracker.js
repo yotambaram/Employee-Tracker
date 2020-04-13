@@ -120,8 +120,7 @@ function addNewRole() {
 
 //add full name
 function addNewEmployeeName() {
-  //let titlesArr = getTitlesArr() ////////////
-  let managerArr = arrBuilder(role)
+  let titlesArr = getTitlesArr()
   newEmployeeArr = []
   inquirer
     .prompt([
@@ -137,14 +136,13 @@ function addNewEmployeeName() {
       }
       ]).then(answer=> {
         newEmployeeArr.push(answer.firstname, answer.lastname)
-        addEmployeeRoll(managerArr)
+        addEmployeeRoll(titlesArr)
       })      
 }
 
 // choose role
 function addEmployeeRoll(titles) {
-  //let managerArr = getManagerArr() //////////////////
-  let managerArr = arrBuilder(manager)
+  let managerArr = getManagerArr()
   inquirer
     .prompt([
       {
@@ -202,7 +200,6 @@ function CreateNewEmployeeDB(){
       });
 }
 
-/*
 // get managers names
 function getManagerArr(){
   const namesArr = [];
@@ -229,22 +226,7 @@ function getTitlesArr(){
   });
   return titleArr;
 }
-*/
-function arrBuilder(arrRec){
-  const arrStorge = {
-    manager: "SELECT * FROM (employee INNER JOIN role ON (employee.role_id = role.role_id)) WHERE (role.title = 'manager')",
-    role: "SELECT title FROM role"
-  }
-  let query = arrStorge.arrRec
-  connection.query("query", function (err, res) {
-    if (err) throw err;
-    for (let i = 0; i < res.length; i++) {
-      let e = res[i].title;
-      titleArr.push(e);
-    }
-  });
-  return newArr;
-}
+
 
 // ************** VIEW DATA **************
 function chooseViewData() {
