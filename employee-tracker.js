@@ -14,10 +14,7 @@ connection.connect(function (err) {
   start();
 });
 
-
-
 let newEmployeeArr = [];
-
 
 // ask the user what he wants to do
 function start() {
@@ -82,7 +79,7 @@ function addNewDepartment() {
     connection.query("INSERT INTO department SET ?", { name: newDepartment}
       , function (err, results) {
         if (err) throw err;
-        console.log(`${newDepartment} add to departments`)
+        console.log(`*****${newDepartment} added to department data *****`)
         start()
       })
   })
@@ -93,7 +90,6 @@ function addNewDepartment() {
 function addNewRole() {
   let departmentsList = getDepartmentsArr()
   let newRole = []
-  console.log(departmentsList)
   inquirer
     .prompt([
       {
@@ -129,7 +125,7 @@ function CreateNewRoleDB(newTitle, newSalary, departmentID){
         }
         , function (err, results) {
         if (err) throw err;
-        console.log(`added to employees data`);
+        console.log(`***** ${newTitle} added to role data *****`);
         start()
       });
 }
@@ -215,7 +211,7 @@ function CreateNewEmployeeDB(){
         }
         , function (err, results) {
         if (err) throw err;
-        console.log(`added to employees data`);
+        console.log(`***** ${newEmployeeArr[0]}dded to employee data *****`);
         start()
       });
 }
