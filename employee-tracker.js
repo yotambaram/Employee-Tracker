@@ -12,8 +12,11 @@ const connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
   start();
-  //getTitlesArr()
 });
+
+
+
+let newEmployeeArr = [];
 
 
 // ask the user what he wants to do
@@ -53,18 +56,18 @@ function addData() {
     .then(function (answer) {
       // based on their answer, either call the bid or the post functions
       if (answer.add_data === "Add department") {
-        addDepartment()
+        addNewDepartment()
       } else if (answer.add_data === "Add role title") {
-        addRole()
+        addNewRole()
       } else if (answer.add_data === "Add employee") {
-        addEmployeeName()
+        addNewEmployeeName()
       } else {
         connection.end();
       }
     });
 }
 
-function addDepartment() {
+function addNewDepartment() {
   inquirer.prompt({
     type: "input",
     message: "Enter name of new department",
@@ -80,7 +83,7 @@ function addDepartment() {
   })
 }
 
-function addRole() {
+function addNewRole() {
   inquirer
     .prompt(
       {
@@ -103,21 +106,14 @@ function addRole() {
           console.log(`${newTitle} add to titles`)
           start()
         })
-        
     })
 }
 
 
 
-
-
-
-
-
-
-function addEmployeeName() {
+//input new employee name
+function addNewEmployeeName() {
   let titlesArr = getTitlesArr()
-  let departmentArr = getDepartmentArr()
   inquirer
     .prompt([
       {
@@ -131,111 +127,91 @@ function addEmployeeName() {
         name: "lastname"
       }
       ]).then(answer=> {
-        connection.query("INSERT INTO employee SET ?",
-        {
-         first_name: answer.firstname,
-         last_name: answer.lastname,
-        }
-        , function (err, results) {
-          if (err) throw err;
-          addEmployeeRoll(titlesArr, departmentArr)
-        })
-      })
+        newEmployeeArr.push(answer.firstname, answer.lastname)
+        addEmployeeRoll(titlesArr)
+      })      
 }
 
-
-function addEmployeeRoll(titles, departments) {
+// choose role
+function addEmployeeRoll(titles) {
+  let managerArr = getManagerArr()
+  //console.log(titles, name, managers)
   inquirer
     .prompt([
       {
         type: "list",
         choices: titles,
         message: "What is the new employee role?",
-        name: "role-id"
-      },
-      {
-        type: "list",
-        choices: departments,
-        message: "choose department",
-        name: "department"
+        name: "roletitle"
       }
       ]).then(answer=> {
-        //find chosen titte ID with sql!!!
-        let query = `SELECT roleid FROM role GROUP BY roleid HAVING count(*) =${role-id}`;
-        connection.query(query,
-        {
-         first_name: answer.firstname,
-         last_name: answer.lastname,
-        }
-        , function (err, results) {
+        //get role_id
+        let query = `SELECT role_id FROM role WHERE title = '${answer.roletitle}';`
+        connection.query(query, function (err, res) {
           if (err) throw err;
-          addEmployeeRoll(titlesArr, departmentArr)
-        })
-      })
-}
-
-/*
-
-
-        connection.query("INSERT INTO role SET ?",
-      {
-       title: answer.title,
-       salary: answer.salary
-      }
-      , function (err, results) {
-        if (err) throw err;
-        addEmployeeDepartment(departmentArr)
-      }),
-      ("INSERT INTO role SET ?",
-      {
-       title: answer.title,
-       salary: answer.salary
-      }
-      , function (err, results) {
-        if (err) throw err;
-        addEmployeeDepartment(departmentArr)
+          newEmployeeArr.push(res[0].role_id)
+          //console.log(NewEmployeeArr, managerArr)
+          getManagerID(managerArr);
+           
       })
     })
 }
 
-function addEmployeeDepartment(departmentArr) {
+// choose manager
+function getManagerID(managers){
+  console.log(newEmployeeArr, managers)
   inquirer
     .prompt([
       {
         type: "list",
-        choices: departmentArr,
-        message: "choose department",
-        name: "department"
+        choices: managers,
+        message: "Who is the new employee manager?",
+        name: "manager"
       }
-      ]).then(answer=> {
-        connection.query("INSERT INTO department SET ?",
+    ]).then(answer=> {
+      let managerName = answer.manager.split(" ")
+      console.log(managerName)
+      let query = `SELECT employee_id FROM employee WHERE first_name = '${managerName[0]}' AND employee.last_name = '${managerName[1]}';`
+      connection.query(query, function (err, res) {
+        if (err) throw err;
+        newEmployeeArr.push(res[0].employee_id)
+        CreateNewEmployeeDB()
+         
+    })
+  })
+}
+
+
+function CreateNewEmployeeDB(){
+  let test = newEmployeeArr[0]
+  connection.query("INSERT INTO employee SET ?",
         {
-          name: answer.department,
+          first_name: newEmployeeArr[0],
+          last_name: newEmployeeArr[1],
+          role_id: newEmployeeArr[2],
+          manager_id: newEmployeeArr[3]
         }
       , function (err, results) {
         if (err) throw err;
         console.log(`added to employees data`)
-        //start()
-      })
-    })
+      });
 }
-*/
 
-// get departments array
-function getDepartmentArr(){
-  let employeesArr = [];
-  connection.query("SELECT name FROM department", function (err, res) {
+// get managers names
+function getManagerArr(){
+  const namesArr = []
+  let query = "SELECT * FROM (employee INNER JOIN role ON (employee.role_id = role.role_id)) WHERE (role.title = 'manager')";
+  connection.query(query, function (err, res) {
     if (err) throw err;
     for (let i = 0; i < res.length; i++) {
-      let e = res[i].name;
-      employeesArr.push(e);
-      //console.log(employeesArr)
+    e = res[i].first_name + " " + res[i].last_name
+    namesArr.push(e)
     }
   });
-  return employeesArr
+  return namesArr
 }
 
-// get titles array
+// get roles array
 function getTitlesArr(){
   let titleArr = [];
   connection.query("SELECT title FROM role", function (err, res) {
@@ -247,6 +223,7 @@ function getTitlesArr(){
   });
   return titleArr
 }
+
 
 
   // ************** VIEW DATA **************

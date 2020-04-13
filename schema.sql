@@ -5,29 +5,29 @@ USE employee_tracker_DB;
 
 
 CREATE TABLE department(
-  depid INT NOT NULL AUTO_INCREMENT,
+  department_id INT NOT NULL AUTO_INCREMENT,
   name VARCHAR(30) NOT NULL,
-  PRIMARY KEY (depid)
+  PRIMARY KEY (department_id)
 );
 
 CREATE TABLE role(
-  roleid INT NOT NULL AUTO_INCREMENT,
+  role_id INT NOT NULL AUTO_INCREMENT,
   title VARCHAR(30) NOT NULL,
   salary DECIMAL (30,2),
-  departmentid INT,
-  FOREIGN KEY (departmentid) REFERENCES department(depid),
-  PRIMARY KEY (roleid)
+  department_id INT,
+  FOREIGN KEY (department_id) REFERENCES department(department_id),
+  PRIMARY KEY (role_id)
 );
 
 CREATE TABLE employee(
-  empid INT NOT NULL AUTO_INCREMENT,
+  employee_id INT NOT NULL AUTO_INCREMENT,
   first_name VARCHAR(30) NOT NULL,
   last_name VARCHAR(30) NOT NULL,
   role_id INT,
   manager_id INT,
-  FOREIGN KEY (role_id) REFERENCES role(roleid),
-  FOREIGN KEY (manager) REFERENCES role(roleid),
-  PRIMARY KEY (empid)
+  FOREIGN KEY (role_id) REFERENCES role(role_id),
+  FOREIGN KEY (manager_id) REFERENCES role(role_id),
+  PRIMARY KEY (employee_id)
 );
 
 
