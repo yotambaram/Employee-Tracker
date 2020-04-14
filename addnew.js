@@ -1,8 +1,8 @@
 // ************** ADD DATA **************
-const addNew = function() {
+const addNew = {
     
     // choose witch data do you want to add
-    function addData() {
+     addData: function() {
         // witch one
         inquirer
           .prompt({
@@ -224,4 +224,4 @@ const addNew = function() {
     
   };
   
-  exports.addNew = addNew;
+  module.exports = addNew;

@@ -17,11 +17,11 @@ connection.connect(function (err) {
 let newEmployeeArr = [];
 
 // ask the user what he wants to do
-function start() {
+function start(){
   inquirer
     .prompt({
       type: "list",
-      choices: ["Add Data", "View Data", "Update Data", "I'm Done, Take me out"],
+      choices: ["Add Data", "View Data", "Update Data", "I'm done, take me out"],
       message: "What Do you want to do??",
       name: "view_dep"
     })
@@ -32,6 +32,8 @@ function start() {
         chooseViewData()
       } else if (answer.view_dep === "Update Data") {
         UpdateData()
+      } else if (answer.view_dep === "I'm done, take me out") {
+        connection.end();
       } else {
         connection.end();
       }
@@ -42,7 +44,7 @@ function start() {
 
 // ************** ADD DATA **************
 // choose witch data do you want to add
-function addData() {
+function addData(){
   // witch one
   inquirer
     .prompt({
@@ -68,8 +70,8 @@ function addData() {
 }
 
 ////////////////////
-// add new department
-function addNewDepartment() {
+// ADD NEW DEPARTMENT
+function addNewDepartment(){
   inquirer.prompt({
     type: "input",
     message: "Enter name of new department",
@@ -86,8 +88,9 @@ function addNewDepartment() {
 }
 
 ////////////////////
-// add new role
-function addNewRole() {
+// ADD NEW ROLE
+//add new title, salary and choose department
+function addNewRole(){
   let departmentsList = getDepartmentsArr()
   let newRole = []
   inquirer
@@ -116,6 +119,7 @@ function addNewRole() {
     })
 }
 
+// set the new role in db
 function CreateNewRoleDB(newTitle, newSalary, departmentID){
   connection.query("INSERT INTO role SET ?",
         {
@@ -130,12 +134,10 @@ function CreateNewRoleDB(newTitle, newSalary, departmentID){
       });
 }
 
-
 ////////////////////
-// add new employee
-
+// ADD NEW EMPLOYEE
 //add full name
-function addNewEmployeeName() {
+function addNewEmployeeName(){
   let titlesArr = getTitlesArr()
   newEmployeeArr = []
   inquirer
@@ -157,7 +159,7 @@ function addNewEmployeeName() {
 }
 
 // choose role
-function addEmployeeRoll(titles) {
+function addEmployeeRoll(titles){
   let managerArr = getManagerArr()
   inquirer
     .prompt([
@@ -211,12 +213,13 @@ function CreateNewEmployeeDB(){
         }
         , function (err, results) {
         if (err) throw err;
-        console.log(`***** ${newEmployeeArr[0]}dded to employee data *****`);
+        console.log(`***** ${newEmployeeArr[0]} added to employee data *****`);
         start()
       });
 }
 
-//possible to make array builder function with diffirent querys
+////////////////////
+// get arrays - possible to make array builder function with diffirent querys
 // get managers array
 function getManagerArr(){
   const namesArr = [];
@@ -231,7 +234,6 @@ function getManagerArr(){
   return namesArr;
 }
 
-
 // get roles array
 function getTitlesArr(){
   let titleArr = [];
@@ -245,7 +247,7 @@ function getTitlesArr(){
   return titleArr;
 }
 
-// get department array
+
 function getDepartmentsArr(){
   let departmentArr = [];
   connection.query("SELECT name FROM department", function (err, res) {
@@ -254,12 +256,29 @@ function getDepartmentsArr(){
       let e = res[i].name;
       departmentArr.push(e);
     }
+
+    return (departmentArr);
   });
-  return departmentArr;
 }
 
-// ************** VIEW DATA **************
-function chooseViewData() {
+
+function getEmployeeArr(){
+  let employeeArr = [];
+  connection.query("SELECT name FROM eployee", function (err, res) {
+    if (err) throw err;
+    for (let i = 0; i < res.length; i++) {
+      let e = res[i].name;
+      employeeArr.push(e);
+    }
+    console.log(employeeArr)
+    return employeeArr;
+  });
+}
+
+
+// ************** ADD DATA **************
+// choose witch data do you want to add
+function chooseViewData(){
   // choose data to view
   inquirer
     .prompt({
@@ -283,8 +302,8 @@ function chooseViewData() {
     });
 }
 
-
-  function viewDepartment() {
+// get departments data
+  function viewDepartment(){
     let query = "SELECT * FROM department";
     connection.query(query, function (err, results) {
       if (err) throw err;
@@ -293,7 +312,8 @@ function chooseViewData() {
     })
   }
 
-  function viewRole() {
+// get role data
+  function viewRole(){
     let query = "SELECT * FROM role";
     connection.query(query, function (err, results) {
       if (err) throw err;
@@ -302,9 +322,8 @@ function chooseViewData() {
     })
   }
 
-
-
-  function viewEmployee() {
+  // get employee data
+  function viewEmployee(){
     let query = "SELECT * FROM employee";
     connection.query(query, function (err, results) {
       if (err) throw err;
@@ -315,30 +334,50 @@ function chooseViewData() {
 
 
   // ************** UPDATE DATA **************
-
-  function UpdateData() {
-    var query = "UPDATE employee.id, employee.first_name FROM top5000 GROUP BY artist HAVING count(*) > 1";
-    //UPDATE EMPLOYEE ROLES
-    // select employee to get his role
-    // update his role
+// choose witch data do you want to update
+  function UpdateData(){
+    //const departmentsList = getDepartmentsArr();
     inquirer
       .prompt({
         type: "list",
-        choices: ["Add department", "Add role", "Add employee"],
-        message: "Witch Data Do you want to add?",
+        choices: ["Update department", "Update role", "Back to main menu"],
+        message: "Witch Data Do you want to update?",
         name: "add_data"
       })
       .then(function (answer) {
-        // based on their answer, either call the bid or the post functions
-        if (answer.add_data === "Add department") {
-          addDepartment()
-        } else if (answer.add_data === "Add role") {
-          addRole()
-        } else if (answer.add_data === "Add employee") {
-          addEmployee()
+        if (answer.add_data === "Update department"){
+          updateDepartment()
+        } else if (answer.add_data === "Update role"){
+          updateRole()
+        } else if (answer.add_data === "Update employee"){
+          updateEmployee()
+        } else if (answer.add_data === "Back to main menu"){
+          start()
         } else {
           connection.end();
         }
       });
   }
+
+
+
+function updateEmployee(){  
+  const employeeList = getEmployeeArr;
+  console.log("employeeList: " + employeeList)
+  inquirer.prompt([
+    {
+    type: "list",
+    message: "Enter employee you want to update",
+    choices: employeeList,//["support", "fsdf"], //employeeList
+    name: "updade_department"
+    }
+  ]).then(function (answer) {
+    console.log(answer)
+    const query = `UPDATE department SET name = '${answer.new_name}' WHERE (department.name = '${answer.updade_department}')`;
+    connection.query(query, function (err, res) {
+      if (err) throw err;
+    });
+  })
+}    
+
 
