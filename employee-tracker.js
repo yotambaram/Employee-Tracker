@@ -43,14 +43,13 @@ function start(){
 
 
 // ************** ADD DATA **************
-// choose witch data do you want to add
+// choose Which data do you want to add
 function addData(){
-  // witch one
   inquirer
     .prompt({
       type: "list",
       choices: ["Add department", "Add role", "Add employee", "Back to menu"],
-      message: "Witch Data Do you want to add?",
+      message: "Which Data Do you want to add?",
       name: "add_data"
     })
     .then(function (answer) {
@@ -251,14 +250,14 @@ function getArr(query, col, col2){
 
 
 // ************** VIEW DATA **************
-// choose witch data do you want to view
+// choose Which data do you want to view
 function chooseViewData(){
   // choose data to view
   inquirer
     .prompt({
       type: "list",
       choices: ["View department", "View role", "View employee", "Back to menu"],
-      message: "Witch Data Do you want to view?",
+      message: "Which Data Do you want to view?",
       name: "view_data"
     })
     .then(function (answer) {
@@ -312,7 +311,7 @@ function chooseViewData(){
 
 
   // ************** UPDATE DATA **************
-// choose witch data do you want to update
+// choose Which data do you want to update
 
 async function chooseEmployee(){
   const ArrQuery = "SELECT first_name, last_name FROM employee"
@@ -321,7 +320,7 @@ async function chooseEmployee(){
   .prompt({
     type: "list",
     choices: employeesList,
-    message: "Witch employee data do you want to update?",
+    message: "Which employee data do you want to update?",
     name: "choose_employee"
   })
   .then(function (answer) {
@@ -337,7 +336,7 @@ async function chooseEmployee(){
       .prompt({
         type: "list",
         choices: ["Update " + employee +"s manager",  "Update " + employee +"s role", "Update employee " + employee +"s name", "Back to main menu"],
-        message: "Witch Data Do you want to update?",
+        message: "Which Data Do you want to update?",
         name: "add_data"
       })
       .then(function (answer) {
@@ -369,7 +368,7 @@ async function chooseEmployee(){
         {
         type: "list",
         choices: roleList,
-        message: "Witch Data Do you want to update?",
+        message: "Which Data Do you want to update?",
         name: "add_data"
         }
       ]).then(function (answer) {
@@ -393,7 +392,7 @@ async function chooseEmployee(){
         {
         type: "list",
         choices: managerList,
-        message: "Witch Data Do you want to update?",
+        message: "Which Data Do you want to update?",
         name: "manager"
         }
       ]).then(function (answer) {
@@ -417,7 +416,7 @@ async function chooseEmployee(){
         {
         type: "list",
         choices: ["First name", "Last name"],
-        message: "Witch Data Do you want to update?",
+        message: "Which Data Do you want to update?",
         name: "update_name"
        },
        {

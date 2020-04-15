@@ -1,4 +1,4 @@
-DROP DATABASE IF EXISTS employee_tracker_DB;
+--DROP DATABASE IF EXISTS employee_tracker_DB;
 CREATE DATABASE employee_tracker_DB;
 
 USE employee_tracker_DB;
@@ -30,11 +30,3 @@ CREATE TABLE employee(
   PRIMARY KEY (employee_id)
 );
 
-INSERT INTO department (name)
-VALUES ("support"),("sales"),("develop");
-
-INSERT INTO role (title, salary, department_id)
-VALUES ("manager", 140, 3),("engineer", 120, 3),("intern", 70, 3),("salesman", 90, 2);
-
-INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("yotam", "baram", 1, null),("adam", "baram", 2, 1);
