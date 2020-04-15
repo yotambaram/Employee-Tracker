@@ -21,16 +21,16 @@ function start(){
   inquirer
     .prompt({
       type: "list",
-      choices: ["Add Data", "View Data", "Update Data", "I'm done, take me out"],
+      choices: ["Add Employee Data", "View Employee Data", "Update Employee Data", "I'm done, take me out"],
       message: "What Do you want to do??",
       name: "view_dep"
     })
     .then(function (answer) {
-      if (answer.view_dep === "Add Data") {
+      if (answer.view_dep === "Add Employee Data") {
         addData()
-      } else if (answer.view_dep === "View Data") {
+      } else if (answer.view_dep === "View Employee Data") {
         chooseViewData()
-      } else if (answer.view_dep === "Update Data") {
+      } else if (answer.view_dep === "Update Employee Data") {
         UpdateData()
       } else if (answer.view_dep === "I'm done, take me out") {
         connection.end();
@@ -81,7 +81,7 @@ function addNewDepartment(){
     connection.query("INSERT INTO department SET ?", { name: newDepartment}
       , function (err, results) {
         if (err) throw err;
-        console.log(`*****${newDepartment} added to department data *****`)
+        console.log(`***** ${newDepartment} added to department data *****`)
         start()
       })
   })
@@ -90,9 +90,9 @@ function addNewDepartment(){
 ////////////////////
 // ADD NEW ROLE
 //add new title, salary and choose department
-function addNewRole(){
-  let departmentsList = getDepartmentsArr()
-  let newRole = []
+async function addNewRole(){
+  const ArrQuery = "SELECT * FROM department"
+  let departmentsList = await getArr(ArrQuery, "name", 0);
   inquirer
     .prompt([
       {
@@ -112,10 +112,14 @@ function addNewRole(){
         name: "department",
       }
     ]).then(function (answer) {
-      let query = `SELECT department_id FROM department WHERE department.name = 'support'`
-      connection.query(query, function (err, res) {
-          CreateNewRoleDB(answer.title, answer.salary, res[0].department_id);
-        })
+      //get dep id
+      let query = `SELECT department_id FROM department WHERE department.name = '${answer.department}'`
+      connection.query(query, function (err, result) {
+        if (err) throw err;
+        const dep_ID = result[0].department_id;
+        CreateNewRoleDB(answer.title, answer.salary, dep_ID);
+      })
+      
     })
 }
 
@@ -127,7 +131,7 @@ function CreateNewRoleDB(newTitle, newSalary, departmentID){
           salary: newSalary,
           department_id: departmentID
         }
-        , function (err, results) {
+        , function (err, result) {
         if (err) throw err;
         console.log(`***** ${newTitle} added to role data *****`);
         start()
@@ -137,8 +141,9 @@ function CreateNewRoleDB(newTitle, newSalary, departmentID){
 ////////////////////
 // ADD NEW EMPLOYEE
 //add full name
-function addNewEmployeeName(){
-  let titlesArr = getTitlesArr()
+async function addNewEmployeeName(){
+  const ArrQuery = "SELECT title FROM role"
+  let titlesList = await getArr(ArrQuery, "title", 0)
   newEmployeeArr = []
   inquirer
     .prompt([
@@ -151,56 +156,51 @@ function addNewEmployeeName(){
         type: "input",
         message: "Enter new employee last name",
         name: "lastname"
-      }
+      },
+      {
+        type: "list",
+        choices: titlesList,
+        message: "What is the new employee role?",
+        name: "roletitle"
+      }      
       ]).then(answer=> {
-        newEmployeeArr.push(answer.firstname, answer.lastname)
-        addEmployeeRoll(titlesArr)
+        let query = `SELECT role_id FROM role WHERE role.title = '${answer.roletitle}';`
+        console.log(query)
+        connection.query(query, function (err, res) {
+          if (err) throw err;
+          newEmployeeArr.push(answer.firstname, answer.lastname, res[0].role_id)
+          console.log(newEmployeeArr)
+          getManager();
+        })
       })      
 }
 
-// choose role
-function addEmployeeRoll(titles){
-  let managerArr = getManagerArr()
-  inquirer
-    .prompt([
-      {
-        type: "list",
-        choices: titles,
-        message: "What is the new employee role?",
-        name: "roletitle"
-      }
-      ]).then(answer=> {
-        let query = `SELECT role_id FROM role WHERE title = '${answer.roletitle}';`
-        connection.query(query, function (err, res) {
-          if (err) throw err;
-          newEmployeeArr.push(res[0].role_id);
-          getManagerID(managerArr);
-      })
-    })
-}
-
 // choose manager
-function getManagerID(managers){
+async function getManager(){
+  let ArrQuery = "SELECT * FROM employee WHERE (role_id = '1')";
+  let firstname = await getArr(ArrQuery, "first_name", "last_name")
   inquirer
     .prompt([
       {
         type: "list",
-        choices: managers,
+        choices: firstname,
         message: "Who is the new employee manager?",
         name: "manager"
       }
     ]).then(answer=> {
       //  possible to set all names to small letters (end case)
-      let managerName = answer.manager.split(" ")
-      let query = `SELECT employee_id FROM employee WHERE first_name = '${managerName[0]}' AND employee.last_name = '${managerName[1]}';`
+      
+      managerName = answer.manager.split(' ');
+      let query = `SELECT employee_id FROM employee WHERE first_name = '${managerName[0]}' AND last_name = '${managerName[1]}';`
       connection.query(query, function (err, res) {
         if (err) throw err;
-        let managerID = res[0].employee_id;
-        newEmployeeArr.push(managerID);
+        newEmployeeArr.push(res[0].employee_id);
         CreateNewEmployeeDB();
     })
   })
 }
+
+
 
 // set the new employee in db
 function CreateNewEmployeeDB(){
@@ -219,8 +219,48 @@ function CreateNewEmployeeDB(){
 }
 
 ////////////////////
-// get arrays - possible to make array builder function with diffirent querys
-// get managers array
+// GET DATA ARRAYS - possible to make array builder function with diffirent querys
+// get data array
+
+function getArr(query, col, col2){
+  let genArr = [];
+  return new Promise( (resolve, reject) => {
+    connection.query(query, function (err, res) {
+      if (err) throw err;
+      if(col2 === 0){
+        for (let i = 0; i < res.length; i++) {
+          let e = res[i][col];
+          genArr.push(e);
+        }
+      } else {
+        for (let i = 0; i < res.length; i++) {
+          let e = res[i][col] + " " + res[i][col2];
+          genArr.push(e);
+        }  
+     };
+   resolve(genArr)
+  });
+});
+}
+
+
+
+/* DELETE
+function getEmployeeArr(){
+  let employeeArr = [];
+  return new Promise( (resolve, reject) => {
+    connection.query("SELECT first_name FROM employee", function (err, res) {
+      if (err) throw err;
+      for (let i = 0; i < res.length; i++) {
+        let e = res[i].first_name;
+        employeeArr.push(e);
+      }
+      resolve(employeeArr)
+   });
+  })
+}
+
+
 function getManagerArr(){
   const namesArr = [];
   let query = "SELECT * FROM (employee INNER JOIN role ON (employee.role_id = role.role_id)) WHERE (role.title = 'manager')";
@@ -233,51 +273,13 @@ function getManagerArr(){
   });
   return namesArr;
 }
-
-// get roles array
-function getTitlesArr(){
-  let titleArr = [];
-  connection.query("SELECT title FROM role", function (err, res) {
-    if (err) throw err;
-    for (let i = 0; i < res.length; i++) {
-      let e = res[i].title;
-      titleArr.push(e);
-    }
-  });
-  return titleArr;
-}
+*/
 
 
-function getDepartmentsArr(){
-  let departmentArr = [];
-  connection.query("SELECT name FROM department", function (err, res) {
-    if (err) throw err;
-    for (let i = 0; i < res.length; i++) {
-      let e = res[i].name;
-      departmentArr.push(e);
-    }
-
-    return (departmentArr);
-  });
-}
 
 
-function getEmployeeArr(){
-  let employeeArr = [];
-  connection.query("SELECT name FROM eployee", function (err, res) {
-    if (err) throw err;
-    for (let i = 0; i < res.length; i++) {
-      let e = res[i].name;
-      employeeArr.push(e);
-    }
-    console.log(employeeArr)
-    return employeeArr;
-  });
-}
-
-
-// ************** ADD DATA **************
-// choose witch data do you want to add
+// ************** VIEW DATA **************
+// choose witch data do you want to view
 function chooseViewData(){
   // choose data to view
   inquirer
@@ -322,6 +324,8 @@ function chooseViewData(){
     })
   }
 
+
+  
   // get employee data
   function viewEmployee(){
     let query = "SELECT * FROM employee";
@@ -333,24 +337,43 @@ function chooseViewData(){
   }
 
 
+
+
   // ************** UPDATE DATA **************
 // choose witch data do you want to update
+
+async function chooseEmployee(){
+  const ArrQuery = "SELECT first_name, last_name FROM employee"
+    let employeesList = await getArr(ArrQuery, "title", 0)
+  inquirer
+  .prompt({
+    type: "list",
+    choices: employeesList,
+    message: "Witch employee data do you want to update?",
+    name: "choose_employee"
+  })
+  .then(function (answer) {
+   console.log(answer)
+})
+}
+
+
+
   function UpdateData(){
-    //const departmentsList = getDepartmentsArr();
     inquirer
       .prompt({
         type: "list",
-        choices: ["Update department", "Update role", "Back to main menu"],
+        choices: ["Update department", "Update role", "Update employee", "Back to main menu"],
         message: "Witch Data Do you want to update?",
         name: "add_data"
       })
       .then(function (answer) {
-        if (answer.add_data === "Update department"){
-          updateDepartment()
-        } else if (answer.add_data === "Update role"){
-          updateRole()
-        } else if (answer.add_data === "Update employee"){
-          updateEmployee()
+        if (answer.add_data === "Update employee manager"){
+          updateEmployeeDepartment()
+        } else if (answer.add_data === "Update employee role"){
+          updateEmployeeRole()
+        } else if (answer.add_data === "Update employee name"){
+          updateEmployeeRole()
         } else if (answer.add_data === "Back to main menu"){
           start()
         } else {
@@ -361,23 +384,8 @@ function chooseViewData(){
 
 
 
-function updateEmployee(){  
-  const employeeList = getEmployeeArr;
-  console.log("employeeList: " + employeeList)
-  inquirer.prompt([
-    {
-    type: "list",
-    message: "Enter employee you want to update",
-    choices: employeeList,//["support", "fsdf"], //employeeList
-    name: "updade_department"
-    }
-  ]).then(function (answer) {
-    console.log(answer)
-    const query = `UPDATE department SET name = '${answer.new_name}' WHERE (department.name = '${answer.updade_department}')`;
-    connection.query(query, function (err, res) {
-      if (err) throw err;
-    });
-  })
-}    
+  async function updateEmployeeDepartment() {
+    const ArrQuery = "SELECT title FROM role"
+    let titlesList = await getArr(ArrQuery, "title", 0)
 
-
+  }
