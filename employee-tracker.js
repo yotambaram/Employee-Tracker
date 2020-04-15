@@ -335,7 +335,7 @@ async function chooseEmployee(){
     inquirer
       .prompt({
         type: "list",
-        choices: ["Update " + employee +"s manager",  "Update " + employee +"s role", "Update employee " + employee +"s name", "Back to main menu"],
+        choices: ["Update " + employee +"s manager",  "Update " + employee +"s role", "Update " + employee +"s name", "Back to main menu"],
         message: "Which Data Do you want to update?",
         name: "add_data"
       })
@@ -346,7 +346,7 @@ async function chooseEmployee(){
         } else if (answer.add_data === "Update " + employee +"s role"){
           updateEmployeeRole(employee)
 
-        } else if (answer.add_data === "Update employee " + employee +"s name"){
+        } else if (answer.add_data === "Update " + employee +"s name"){
           updateEmployeeName(employee)
 
         } else if (answer.add_data === "Back to main menu"){

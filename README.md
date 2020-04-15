@@ -1,5 +1,35 @@
-things to do:
-* set function that get employee id and change all the places that doing "WHERE first_name AND last_name.
-* do all checks after "lower case" charcters
-* set an option to delete data
-* set more options of view data
+# Employee Summary
+
+Yotam Baram
+Email : yotambaram@gmail.com
+
+
+**Project Description:**
+The app is designed for managing employees in the company by full employee name, 
+role (TITLE AND SALARY) and department.
+Each column has its own identification number so there is no problem being the same names for employees, roles, 
+departments or any other name (for example, two employees with the same full name but different number or two same
+roles in the same department with different pay).
+The app allows you to view the DATA or add the DATA by employees, roles and departments and update 
+employee information such as name, personal manager or job title and department.
+
+**Instructions:** 
+Install the package.json.
+Open a SQL server with the attached schema.sql (also an example seeds file)
+Run Employee-Tracker.js in the terminal.
+Welcome! Follow the menu in the terminal.
+
+**Contributing:**
+The app enables employee management (HR) in a simple and clean way.
+
+**Bug fixes and future developments:**
+*Development:
+ - Delete data option.
+ - Employee search option (BY USER INPUT)
+ - More data view options.
+*Debug
+ - Fix name verification for employee by ID and not by full name.
+ - Verify unimportant names for upper or lower case letters entered by the user.
+
+Picture link: ![badge](employee tracker.JPG)
+![badge](https://img.shields.io/static/v1?label=Version&message=1.0&color=red)
