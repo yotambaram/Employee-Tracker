@@ -8,7 +8,7 @@ Email : yotambaram@gmail.com
 
 
 ### Project Description:
-The app is designed for managing employees in the company by full employee name, role (TITLE AND SALARY) and department.
+The app is designed for managing employees in the company by full employee name, his manager, role (include role and salary) and department.
 
 Each column has its own identification number so there is no problem being the same names for employees, roles, 
 departments or any other name (for example, two employees with the same full name but different number or two same
@@ -32,14 +32,15 @@ The app enables employee management (HR) in a simple and clean way.
 ### Bug fixes and future developments:
 
 * Development:
-  -  Delete data option.
-  - Employee search option (BY USER INPUT)
+  - Delete data option.
+  - Employee search option (by user input)
   - More data view options.
  
 
 * Debug
   - Fix name verification for employee by ID and not by full name.
-  - More data view options.
+  - fix edge cases with conditions (cant update when data is empty, make all case comparisons to low letters)
+  
 
 
 ![badge](https://github.com/yotambaram/Employee-Tracker/blob/master/employee%20tracker.JPG?raw=true)
