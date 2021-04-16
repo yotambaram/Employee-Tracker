@@ -3,11 +3,7 @@
 
 By Yotam Baram
 
-Email : yotambaram@gmail.com
-
-
-
-### Project Description:
+### Description:
 The app is designed for managing employees in the company by full employee name, his manager, role (include role and salary) and department.
 
 Each column has its own identification number so there is no problem being the same names for employees, roles, 
